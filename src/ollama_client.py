@@ -42,15 +42,17 @@ async def consult(prompt: str, modelo: str = "qwen2.5vl:3b", imagen: bytes | str
                 {
                         'role': 'system',
                         'content': (
-                                        f"{system_prompt} Estás viendo la captura de pantalla del usuario. "
-                                        "Describe en tercera persona qué aplicación o contenido ves en la imagen, "
-                                        "en máximo 2 oraciones directas sin inventar historias ni hablar de programación si no hay código en pantalla."
+                                        f"{system_prompt}\n\n"
+                                        "Estás viendo las capturas de los monitores del usuario (Imagen 1 es el monitor izquierdo, Imagen 2 es el monitor derecho). "
+                                        "Ignora la ventana de Discord donde chatean y responde directamente qué aplicación, archivo o código ves en el otro monitor, "
+                                        "conectándolo con lo que acaban de hablar en máximo 2 oraciones directas."
                                    ),
         },
+        *memories[-2:],
         {
             'role': 'user',
             'content': f"[Ventana activa: {ventana}]\n{prompt}",
-            'images': imagen,
+            'images': [imagen],
         },
     ]
         else:
@@ -91,23 +93,24 @@ async def extract_fact(message_user: str) -> None:
             return
 
         prompt_extract = [
-              {
+            {
                 'role': 'system',
                 'content': (
-                    "Eres un extractor de memoria. Analiza el mensaje del usuario. "
-                    "Si menciona un dato personal permanente, preferencia, gusto, proyecto o herramienta que usa, "
-                    "resúmelo en UNA sola oración corta y objetiva (ejemplo: 'el usario toma cafe.'). "
-                    "Si es un saludo, broma, orden momentánea o charla sin datos permanentes, responde únicamente: NADA"
+                    "Eres un filtro de memoria selectivo. Tu trabajo es extraer únicamente datos permanentes, biográficos, "
+                    "de hardware o herramientas del usuario (como su nombre, sistema operativo, lenguajes o gustos fijos).\n"
+                    "REGLAS:\n"
+                    "- IGNORA por completo pruebas temporales, errores, saludos o charlas casuales (ej: 'estoy probando SQLite' -> NADA).\n"
+                    "- GUARDA SÓLO si el mensaje aporta un hecho definitivo (ej: 'uso Windows 11' o 'me llamo Esteban' -> extráelo en una oración clara).\n"
+                    "- Si no hay ningún dato permanente nuevo, responde únicamente: NADA"
                 ),
             },
-
             {'role': 'user', 'content': text},
-
         ]
+        
         res = await AsyncClient().chat(
             model="qwen2.5vl:3b",
             messages=prompt_extract,
-            options={"temperature": 0.1, "num_predict": 35},
+            options={"temperature": 0.0, "num_predict": 40},
         )
 
         hecho = res['message']['content'].strip()
