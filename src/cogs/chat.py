@@ -4,7 +4,8 @@ import re
 
 from discord.ext import commands
 
-from src.ollama_client import consult, extract_fact
+from src.extract_manager import extract_fact
+from src.ollama_client import consult
 from src.vision_engine import take_screenshot
 from src.database import save_fact
 
@@ -61,7 +62,7 @@ class ChatCog(commands.Cog):
                 answer = "Tsk, me quedé en blanco. Repítemelo."
             await message.channel.send(answer)
 
-            if not guardado_manual:
+            if not message.author.bot and not guardado_manual:
                 asyncio.create_task(extract_fact(message.content))
 
 async def setup(bot):
