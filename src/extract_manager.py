@@ -15,7 +15,7 @@ PATRONES_RELEVANTES = {
 }
 
 async def extract_fact(message_content: str) -> None:
-    if not message_content or message_content.strip():
+    if not message_content or not  message_content.strip():
         return
 
     text = message_content.strip()
