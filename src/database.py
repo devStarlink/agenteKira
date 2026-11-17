@@ -36,5 +36,18 @@ def save_fact(categoria: str, contenido: str) -> None:
 
 def get_all_facts() -> list[str]:
     with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.execute("SELECT contenido FROM hechos ORDER BY id ASC")
+        cursor = conn.execute(
+            
+            """
+            SELECT contenido FROM hechos 
+            WHERE categoria IN ('usuario', 'proposito', 'capacidades')
+            UNION ALL
+            SELECT contenido FROM (
+                SELECT contenido FROM hechos 
+                WHERE categoria NOT IN ('usuario', 'proposito', 'capacidades')
+                ORDER BY id DESC LIMIT 10
+            )
+            """
+        )
+
         return [row[0] for row in cursor.fetchall()]
