@@ -85,36 +85,3 @@ async def consult(prompt: str, modelo: str = "qwen2.5vl:3b", imagen: bytes | str
         import traceback
         traceback.print_exc()
         return f"An error occurred while connecting to Ollama: {e}"
-
-async def extract_fact(message_user: str) -> None:
-    try:
-        text = message_user.strip()
-        if len(text) < 12 or "?" in text:
-            return
-
-        prompt_extract = [
-            {
-                'role': 'system',
-                'content': (
-                    "Eres un filtro de memoria selectivo. Tu trabajo es extraer únicamente datos permanentes, biográficos, "
-                    "de hardware o herramientas del usuario (como su nombre, sistema operativo, lenguajes o gustos fijos).\n"
-                    "REGLAS:\n"
-                    "- IGNORA por completo pruebas temporales, errores, saludos o charlas casuales (ej: 'estoy probando SQLite' -> NADA).\n"
-                    "- GUARDA SÓLO si el mensaje aporta un hecho definitivo (ej: 'uso Windows 11' o 'me llamo Esteban' -> extráelo en una oración clara).\n"
-                    "- Si no hay ningún dato permanente nuevo, responde únicamente: NADA"
-                ),
-            },
-            {'role': 'user', 'content': text},
-        ]
-        
-        res = await AsyncClient().chat(
-            model="qwen2.5vl:3b",
-            messages=prompt_extract,
-            options={"temperature": 0.0, "num_predict": 40},
-        )
-
-        hecho = res['message']['content'].strip()
-        if hecho and "NADA" not in hecho.upper() and len(hecho) <= 120:
-            save_fact("auto", hecho)
-    except Exception:
-        pass
