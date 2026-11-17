@@ -4,7 +4,7 @@ import io
 from PIL import Image
 from src.privated_engine import secure_screen
 
-def take_screenshot() -> tuple[list[bytes], str] | str:
+def take_screenshot() -> tuple[bytes, str] | str:
     secure, info = secure_screen()
 
     if not secure:
@@ -12,16 +12,13 @@ def take_screenshot() -> tuple[list[bytes], str] | str:
         return "BLOQUEADO"
 
     with mss.mss() as sct:
-        capturas = []
-        for monitor in sct.monitors[1:]:
-            capture = sct.grab(monitor)
-            img = Image.frombytes("RGB", capture.size, capture.bgra, "raw", "BGRX")
-            img.thumbnail((960, 540))
+        monitor = sct.monitors[2]
+        capture = sct.grab(monitor)
+        img = Image.frombytes("RGB", capture.size, capture.bgra, "raw", "BGRX")
+        img.thumbnail((1280, 720))
 
-            buffer = io.BytesIO()
-            img.save(buffer, format="JPEG", quality=75)
-            capturas.append(buffer.getvalue())
-        
-        return capturas, info
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=80)
+        return buffer.getvalue(), info
 
     
