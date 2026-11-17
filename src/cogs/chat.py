@@ -1,11 +1,18 @@
 import discord
 import asyncio
+import re
 
 from discord.ext import commands
 
 from src.ollama_client import consult, extract_fact
 from src.vision_engine import take_screenshot
 from src.database import save_fact
+
+PATRON_VISION = re.compile(
+     r"\b(mir|ve|chec|revis|observ|analiz)[a-z]*\b.*\b(pantalla|pantallas|monitor|monitores|escritorio)\b"
+     r"|\b(pantalla|pantallas|monitor|monitores|escritorio)\b.*\b(mir|ve|chec|revis|observ|analiz)[a-z]*\b",
+     re.IGNORECASE,
+)
 
 class ChatCog(commands.Cog):
     def __init__(self, bot):
@@ -36,13 +43,17 @@ class ChatCog(commands.Cog):
                     save_fact("aprendido", f"el usario indicó: {dato_nuevo}")
                     guardado_manual = True
 
-        pistas = ("mira", "ves", "pantalla", "ayuda", "vez", "miras", "que tal ahora")
-        capture = take_screenshot() if any(p in message.content.lower() for p in pistas) else None
+        capture = take_screenshot() if PATRON_VISION.search(message.content) else None
+
+        imagen = None
+        ventana = None
 
         if isinstance(capture, tuple):
             imagen, ventana = capture
-        else:
-            imagen, ventana = capture, None
+
+        elif isinstance(capture, str) and capture == "BLOQUEADO":
+            imagen = "BLOQUEADO"
+            ventana = None
 
         async with message.channel.typing():
             answer = await consult(message.content, imagen=imagen, ventana=ventana)
