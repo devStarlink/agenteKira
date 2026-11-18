@@ -15,13 +15,13 @@ PATRONES_RELEVANTES = {
 }
 
 async def extract_fact(message_content: str) -> None:
-    if not message_content or message_content.strip():
+    if not message_content or not  message_content.strip():
         return
 
     text = message_content.strip()
 
     # CLASIFICACION NIVEL 1 (INFORMACION IRRELEVANTE) NO SE GUARDAN EN LA BASE DE DATOS
-    if len(text) < 12 or "?" in text or not PATRONES_BASURA.search(text):
+    if len(text) < 5 or "?" in text or PATRONES_BASURA.search(text):
         return
 
     #CLASIFICACION NIVEL 2 (INFORMACION RELEVANTE) SI SE GUARDAN EN LA BASE DE DATOS

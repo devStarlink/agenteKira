@@ -8,6 +8,7 @@ class KiraBot(commands.Bot):
 
         super().__init__(command_prefix="!", intents=intents)
         self.owner_id = owner_id
+        self.ultimo_canal = None
 
     async def setup_hook(self):
         await self.load_extension("src.cogs.voice")
@@ -15,6 +16,9 @@ class KiraBot(commands.Bot):
 
         await self.load_extension("src.cogs.chat")
         print("[MODULOS] Módulo de chat cargado exitosamente.")
+
+        await self.load_extension("src.cogs.proactivity")
+        print("[MODULOS] Módulo de proactividad cargado exitosamente.")
 
     async def on_ready(self):
         print(f"[OK] {self.user} conectado y operando bajo aislamiento estricto.")
@@ -26,6 +30,8 @@ class KiraBot(commands.Bot):
         if message.author.id != self.owner_id:
             print(f"[ALERTA] Acceso bloqueado de: {message.author} (ID: {message.author.id})")
             return
+
+        self.ultimo_canal = message.channel
 
         await self.process_commands(message)
 
